@@ -1,0 +1,17 @@
+---
+description: Poultry Farm agent pointers — always load AGENTS.md and key docs
+alwaysApply: true
+---
+
+# Poultry Farm
+
+Before product or architecture changes, read:
+
+- `AGENTS.md` — commands, conventions, boundaries
+- `docs/PRD-poultry-farm-MVP.md` — scope and roles
+- `docs/architecture.md` — modules and data model
+- `MEMORY.md` — active phase
+
+Do not paste or duplicate the PRD here. Keep rules thin; update linked docs instead.
+
+Roles: **Owner** (monitor + analytics), **Farm Manager** (daily birds/eggs + godown feed). Tenant: Customer → Farms → Sheds.

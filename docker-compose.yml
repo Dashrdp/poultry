@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: poultry-postgres
+    environment:
+      POSTGRES_USER: poultry
+      POSTGRES_PASSWORD: poultry-dev
+      POSTGRES_DB: poultry
+    ports:
+      - "5432:5432"
+    volumes:
+      - poultry-pg-data:/var/lib/postgresql/data
+      - ./backend/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poultry -d poultry"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  poultry-pg-data:

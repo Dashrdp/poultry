@@ -1,0 +1,53 @@
+@import "@fontsource-variable/geist";
+@source "../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
+@import "@cloudflare/kumo/styles/tailwind";
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Geist Variable", Geist, system-ui, sans-serif;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-main {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 1.5rem 1.5rem 3rem;
+}
+
+.shed-map__yard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.shed-tile {
+  display: flex;
+  min-height: 7.5rem;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0.25rem;
+  transition: transform 160ms ease;
+}
+
+.shed-tile:hover,
+.shed-tile:focus-visible {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .shed-map__yard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

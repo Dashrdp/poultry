@@ -1,0 +1,26 @@
+---
+description: Always apply taste-skill (design-taste-frontend) for frontend/UI work
+alwaysApply: true
+---
+
+# Taste Skill (anti-slop frontend)
+
+Source: https://github.com/Leonxlnx/taste-skill  
+Installed skill: `.agents/skills/design-taste-frontend/SKILL.md` (also `.cursor/skills/design-taste-frontend/`)
+
+## Always
+
+- Before any frontend/UI/layout/styling work, **read** the skill file above and follow it.
+- Start with a one-line **Design Read** (page kind, audience, vibe, system family).
+- Set dials from the brief; for this **ops product dashboard** default to roughly **VARIANCE 4 / MOTION 3 / DENSITY 6** unless the brief says otherwise.
+- Apply anti-slop rules: hierarchy, spacing, type rhythm, motion restraint, no LLM-default purple/mesh/card grids.
+
+## Precedence (this repo)
+
+1. **Kumo** (`.cursor/rules/kumo-ui.mdc`) wins for components, semantic color tokens, `data-mode`, and charts.
+2. **Taste-skill** wins for layout judgment, spacing, hierarchy, and anti-generic polish *within* Kumo.
+3. Do **not** invent a second design system, custom brand palette, or non-Kumo chart stack to satisfy taste-skill.
+
+## Not a free pass
+
+Taste-skill's landing/portfolio defaults do not override PRD scope or Kumo. Product screens stay Cloudflare-dashboard language.

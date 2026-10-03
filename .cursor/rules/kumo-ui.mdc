@@ -1,0 +1,55 @@
+---
+description: Kumo/Cloudflare UI is mandatory for all frontend work
+alwaysApply: true
+---
+
+# Kumo UI (Cloudflare dashboard)
+
+Canonical docs: https://kumo-ui.com/
+
+## Must
+
+- Build UI with `@cloudflare/kumo` components and blocks from kumo-ui.com
+- Colors: Kumo **semantic** Tailwind tokens only (see https://kumo-ui.com/colors)
+- Light/dark: set `data-mode="light"` or `data-mode="dark"` on `<html>` — never Tailwind `dark:` variants
+- **Charts/graphs:** only Kumo chart stack from https://kumo-ui.com/charts/
+  - Hub: [Charts](https://kumo-ui.com/charts/)
+  - Time trends: [TimeseriesChart](https://kumo-ui.com/charts/timeseries/)
+  - Other plots: [Custom Chart](https://kumo-ui.com/charts/custom/) (`Chart`)
+  - Colors: [ChartPalette](https://kumo-ui.com/charts/colors/) — see palette rules below
+  - Series labels: `ChartLegend` (`LargeItem` / `SmallItem`)
+  - Peer dep: `echarts` (tree-shake imports per Kumo docs); pass `echarts` into `TimeseriesChart` / `Chart`
+- App chrome: use Kumo `Sidebar` for side navigation
+- Typography: **Geist** (`@fontsource-variable/geist`) as default UI font
+- Before inventing a custom control or chart, check kumo-ui.com first
+
+## Chart palette rules
+
+Pick the palette by data task ([chart colors](https://kumo-ui.com/charts/colors/)):
+
+| System | When | API | Poultry examples |
+|--------|------|-----|------------------|
+| **Semantic** | Inherent polarity / status / primary vs secondary metric | `ChartPalette.semantic(token, isDark)` | Eggs=`Neutral`, Birds=`Attention`; alerts/callouts `Warning` / `Success` |
+| **Categorical** | Nominal series with no polarity (farms, sheds) | `ChartPalette.categorical(i % 5, isDark)` | Shed/farm performance bar charts |
+| **Sequential** | Density / magnitude scale only | `ChartPalette.sequential(...)` | Heatmaps — **out of MVP scope** |
+
+Semantic tokens for charts: `Attention`, `Warning`, `Success`, `Neutral`, `Disabled`, `Skeleton`.
+
+Always pass `isDarkMode` from theme (`data-mode` / `pf-theme`). Never invent hex/farm greens outside `ChartPalette`.
+
+## Must not
+
+- Custom brand palettes (green/straw/farm themes, etc.) that bypass Kumo tokens
+- Custom SVG/canvas chart replacements when Kumo charts cover the need
+- Raw ECharts UI without wrapping in Kumo `TimeseriesChart` / `Chart`
+- A second UI kit beside Kumo without an ADR
+- Using categorical for polarity data, or semantic for many identity series that need distinguishability
+
+## Theme toggle
+
+Persist mode in `localStorage` (`pf-theme`) and keep `<html data-mode>` in sync.
+Pass `isDarkMode` into Kumo chart components from the same theme.
+
+## With taste-skill
+
+Layout/spacing/hierarchy anti-slop comes from `design-taste-frontend` (see `.cursor/rules/taste-skill.mdc`). Kumo still owns components, tokens, charts, and `data-mode`.
