@@ -18,7 +18,15 @@
 - **Impact:** Brute-force / data access if weak password.
 - **Fix:** `deploy/docker-compose.yml` keeps Postgres on the internal network only. Use a strong `POSTGRES_PASSWORD`.
 
-### PF-DEP-003 — Demo seed credentials
+### PF-DEP-003 — ProxyHeadersMiddleware trusted_hosts="*"
+
+- **Severity:** Medium
+- **Evidence:** `main.py` used `ProxyHeadersMiddleware(trusted_hosts="*")`, which sets uvicorn `always_trust` and accepts `X-Forwarded-Proto` / `X-Forwarded-For` from any peer.
+- **High-level reproduction:** Any client that can reach the API sends forged `X-Forwarded-Proto: https` (or client IP) and the app treats it as trusted.
+- **Impact:** Secure-cookie / scheme confusion; client IP spoofing in logs if relied upon.
+- **Fix:** `PF_TRUSTED_PROXIES` defaults to loopback only; `*` is rejected. Deploy compose pins network `172.28.10.0/24` and sets `PF_TRUSTED_PROXIES` to that CIDR (uvicorn trusts peer **IP**, not Docker DNS names).
+
+### PF-DEP-004 — Demo seed credentials
 
 - **Severity:** Medium on internet-facing hosts
 - **Evidence:** `seed.py` creates `owner@demo.local` / `owner-pass`.

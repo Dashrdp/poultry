@@ -230,6 +230,6 @@ Append-only. Newest at the bottom. Do not rewrite history; supersede with a new 
 
 **Context:** Need a Linux host path with Docker and Caddy. Hardcoded `http://localhost:8010` and open DB ports do not fit production.
 
-**Decision:** `deploy/docker-compose.yml` runs `db` + `api` + `web` (Caddy). Caddy serves the Vite build and reverse-proxies `/api*` and `/health` to the API. Frontend uses `VITE_API_BASE` (empty in the image = same origin). Session `https_only` and CORS come from env; `ProxyHeadersMiddleware` trusts Caddy’s forwarded proto. Root `docker-compose.yml` stays Postgres-only for local/dev.
+**Decision:** `deploy/docker-compose.yml` runs `db` + `api` + `web` (Caddy). Caddy serves the Vite build and reverse-proxies `/api*` and `/health` to the API. Frontend uses `VITE_API_BASE` (empty in the image = same origin). Session `https_only` and CORS come from env; `ProxyHeadersMiddleware` trusts peers listed in `PF_TRUSTED_PROXIES` (deploy network CIDR `172.28.10.0/24`, never `*`). Root `docker-compose.yml` stays Postgres-only for local/dev.
 
 **Consequences:** One public origin (80/443). Operators must set `SITE_ADDRESS`, `POSTGRES_PASSWORD`, `PF_SESSION_SECRET`. Seed is a one-shot `docker compose exec api python seed.py`.

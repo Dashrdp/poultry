@@ -17,6 +17,7 @@ from logs_api import router as logs_router
 from managers_api import router as managers_router
 from rates_api import router as rates_router
 from models import User
+from proxy_trust import resolve_trusted_proxy_hosts
 from schemas_auth import LoginBody, UserOut
 
 _cors_raw = os.getenv(
@@ -25,6 +26,7 @@ _cors_raw = os.getenv(
 )
 _cors_origins = [o.strip() for o in _cors_raw.split(",") if o.strip()]
 _https_only = os.getenv("PF_HTTPS_ONLY", "0").lower() in ("1", "true", "yes")
+_trusted_proxies = resolve_trusted_proxy_hosts(os.getenv("PF_TRUSTED_PROXIES"))
 
 app = FastAPI(title="PoultryTrack API")
 app.include_router(farms_router)
@@ -50,8 +52,8 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["Content-Disposition"],
 )
-# Trust X-Forwarded-* from Caddy so https_only cookies see the real scheme.
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+# Trust X-Forwarded-* only from listed proxy peers (Caddy on deploy network).
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=_trusted_proxies)
 
 
 @app.on_event("startup")

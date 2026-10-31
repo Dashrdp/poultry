@@ -1,6 +1,16 @@
+# Fixed subnet so api can trust X-Forwarded-* only from this network (Caddy),
+# not from "*" / arbitrary peers. uvicorn matches the TCP peer IP, not DNS names.
+networks:
+  poultry:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.10.0/24
+
 services:
   db:
     image: postgres:16
+    networks: [poultry]
     environment:
       POSTGRES_USER: poultry
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
@@ -19,11 +29,13 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
+    networks: [poultry]
     environment:
       DATABASE_URL: postgresql+psycopg://poultry:${POSTGRES_PASSWORD}@db:5432/poultry
       PF_SESSION_SECRET: ${PF_SESSION_SECRET:?set PF_SESSION_SECRET in .env}
       PF_HTTPS_ONLY: ${PF_HTTPS_ONLY:-1}
       PF_CORS_ORIGINS: ${PF_CORS_ORIGINS:-}
+      PF_TRUSTED_PROXIES: ${PF_TRUSTED_PROXIES:-172.28.10.0/24}
     depends_on:
       db:
         condition: service_healthy
@@ -35,6 +47,7 @@ services:
       dockerfile: deploy/Dockerfile.caddy
       args:
         VITE_API_BASE: ""
+    networks: [poultry]
     ports:
       - "80:80"
       - "443:443"
