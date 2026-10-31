@@ -1,3 +1,6 @@
+# Stable project name whether you run from repo root or deploy/.
+name: poultry
+
 # Fixed subnet so api can trust X-Forwarded-* only from this network (Caddy),
 # not from "*" / arbitrary peers. uvicorn matches the TCP peer IP, not DNS names.
 networks:
@@ -39,6 +42,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8010/health', timeout=3)",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     restart: unless-stopped
 
   web:
@@ -58,7 +73,8 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

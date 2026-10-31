@@ -9,4 +9,6 @@ httpx
 pytest
 itsdangerous
 reportlab
-matplotlib
+# NumPy 2 wheels need x86-64-v2; many small VPS CPUs lack it.
+numpy>=1.26.4,<2
+matplotlib>=3.8,<3.10

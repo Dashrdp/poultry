@@ -95,17 +95,27 @@ Stack in `deploy/`: Postgres + FastAPI + Caddy (static UI, TLS, `/api` + `/healt
 
 On the host: Docker Engine + Compose plugin, ports **80/443** open, DNS A/AAAA on your domain pointing at the box.
 
+Always use the **deploy** compose (root `docker-compose.yml` is local Postgres only — no `api`/`web`).
+
 ```bash
-cd deploy
+cd /opt/poultry/deploy   # or: cd deploy
 cp .env.example .env
 # edit SITE_ADDRESS, POSTGRES_PASSWORD, PF_SESSION_SECRET
 # SITE_ADDRESS=your.domain.com   # Caddy auto-HTTPS
 # SITE_ADDRESS=:80               # HTTP only / IP smoke test → set PF_HTTPS_ONLY=0
 
 docker compose up -d --build
+docker compose ps
+docker compose logs api --tail 100
 docker compose exec api python seed.py
 ```
 
+From repo root instead: `docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build`.
+
 Open `https://your.domain.com` (or `http://SERVER_IP` if `:80`). Demo logins same as local seed.
 
-Stop / wipe DB volume: `docker compose down` / `docker compose down -v`.
+Stop / wipe DB volume: `docker compose down` / `docker compose down -v` (from `deploy/`).
+
+If Caddy returns 502 / `connection refused` / `lookup api`: `api` is down or you used the wrong compose file. Run `docker compose -f deploy/docker-compose.yml ps -a` and `logs api`.
+
+If `api` crash-loops with `NumPy was built with baseline optimizations (X86_V2)`: the host CPU is older than NumPy 2’s baseline. This repo pins `numpy<2` for that; rebuild the API image after pull.
