@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: poultry
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: poultry
+    volumes:
+      - poultry-pg-data:/var/lib/postgresql/data
+      - ../backend/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poultry -d poultry"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://poultry:${POSTGRES_PASSWORD}@db:5432/poultry
+      PF_SESSION_SECRET: ${PF_SESSION_SECRET:?set PF_SESSION_SECRET in .env}
+      PF_HTTPS_ONLY: ${PF_HTTPS_ONLY:-1}
+      PF_CORS_ORIGINS: ${PF_CORS_ORIGINS:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.caddy
+      args:
+        VITE_API_BASE: ""
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS in .env (domain or :80)}
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  poultry-pg-data:
+  caddy-data:
+  caddy-config:

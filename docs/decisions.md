@@ -221,3 +221,15 @@ Append-only. Newest at the bottom. Do not rewrite history; supersede with a new 
 **Decision:** One period model: inclusive ISO `from` + `to` on dashboard, PDF export, and `/api/analytics/*`. UI presets (Yesterday, This week Mon–Sun, This month, Last month, Year) plus Custom via Kumo `DatePicker` range. Period syncs in URL (`preset`, `from`, `to`). Analytics caps `to` at yesterday; Monitor at today. Prior/baseline = equal-length window before `from`. Max span 366 days.
 
 **Consequences:** Client and tests pass `from`/`to` instead of `range` or `days`. Bird-day KPI math unchanged. Spec: [specs/015-owner-period-filter.md](../specs/015-owner-period-filter.md); design: [superpowers/specs/2026-10-02-owner-period-filter-design.md](superpowers/specs/2026-10-02-owner-period-filter-design.md).
+
+---
+
+## 2026-10-31 — Deploy: Docker Compose + Caddy same-origin
+
+**Status:** accepted
+
+**Context:** Need a Linux host path with Docker and Caddy. Hardcoded `http://localhost:8010` and open DB ports do not fit production.
+
+**Decision:** `deploy/docker-compose.yml` runs `db` + `api` + `web` (Caddy). Caddy serves the Vite build and reverse-proxies `/api*` and `/health` to the API. Frontend uses `VITE_API_BASE` (empty in the image = same origin). Session `https_only` and CORS come from env; `ProxyHeadersMiddleware` trusts Caddy’s forwarded proto. Root `docker-compose.yml` stays Postgres-only for local/dev.
+
+**Consequences:** One public origin (80/443). Operators must set `SITE_ADDRESS`, `POSTGRES_PASSWORD`, `PF_SESSION_SECRET`. Seed is a one-shot `docker compose exec api python seed.py`.

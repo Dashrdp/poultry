@@ -87,4 +87,25 @@ Frontend uses [Kumo UI](https://kumo-ui.com/). Charts must use Kumo chart compon
 - `GET /api/farms` → farm list for selector
 - `GET /api/dashboard?farm_id=&range=current_month|previous_month|year` → Owner dashboard payload
 
-> Note: API defaults to **8010** in this project (port 8000 may be blocked on some Windows setups). Frontend `api.ts` matches.
+> Note: API defaults to **8010** in this project (port 8000 may be blocked on some Windows setups). Frontend `api.ts` matches. Production builds use same-origin `/api` via Caddy (`VITE_API_BASE=""`).
+
+## Deploy (Linux + Docker + Caddy)
+
+Stack in `deploy/`: Postgres + FastAPI + Caddy (static UI, TLS, `/api` + `/health` proxy). Same origin — no public API port.
+
+On the host: Docker Engine + Compose plugin, ports **80/443** open, DNS A/AAAA on your domain pointing at the box.
+
+```bash
+cd deploy
+cp .env.example .env
+# edit SITE_ADDRESS, POSTGRES_PASSWORD, PF_SESSION_SECRET
+# SITE_ADDRESS=your.domain.com   # Caddy auto-HTTPS
+# SITE_ADDRESS=:80               # HTTP only / IP smoke test → set PF_HTTPS_ONLY=0
+
+docker compose up -d --build
+docker compose exec api python seed.py
+```
+
+Open `https://your.domain.com` (or `http://SERVER_IP` if `:80`). Demo logins same as local seed.
+
+Stop / wipe DB volume: `docker compose down` / `docker compose down -v`.

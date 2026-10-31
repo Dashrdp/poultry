@@ -29,6 +29,10 @@ Repo-owned session memory. Keep short. Update after meaningful milestones.
 - Manager: `manager@demo.local` / `manager-pass` (sees **farm-1** only)
 - `python seed.py` also loads ~365 days logs/feed/rates for all 3 farms (`--force-ops` to rebuild)
 
+## Deploy
+
+- Linux host: `deploy/docker-compose.yml` (Postgres + API + Caddy). Copy `deploy/.env.example` → `.env`. See README “Deploy”.
+
 ## Next small slice
 
 1. S3 Daily entry v2.

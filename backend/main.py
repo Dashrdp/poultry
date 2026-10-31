@@ -4,6 +4,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from analytics_api import router as analytics_router
 from auth import SESSION_USER_KEY, authenticate, require_user, user_to_out
@@ -17,6 +18,13 @@ from managers_api import router as managers_router
 from rates_api import router as rates_router
 from models import User
 from schemas_auth import LoginBody, UserOut
+
+_cors_raw = os.getenv(
+    "PF_CORS_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173",
+)
+_cors_origins = [o.strip() for o in _cors_raw.split(",") if o.strip()]
+_https_only = os.getenv("PF_HTTPS_ONLY", "0").lower() in ("1", "true", "yes")
 
 app = FastAPI(title="PoultryTrack API")
 app.include_router(farms_router)
@@ -32,16 +40,18 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("PF_SESSION_SECRET", "dev-only-change-me"),
     same_site="lax",
-    https_only=False,
+    https_only=_https_only,
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["Content-Disposition"],
 )
+# Trust X-Forwarded-* from Caddy so https_only cookies see the real scheme.
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 
 @app.on_event("startup")
