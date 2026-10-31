@@ -114,18 +114,24 @@ docker compose exec api python seed.py
 
 From repo root instead: `docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build`.
 
-If `ps` only shows `poultry-postgres` / odd `poultry-api-1`, stop root + orphan projects, then start **only** from `deploy/`:
+If `ps` shows the wrong project or ports are busy, tear down **by project name**, then start only from `deploy/`:
 
 ```bash
-cd /opt/poultry && docker compose down
-docker rm -f poultry-api-1 poultry-db-1 poultry-web-1 2>/dev/null || true
+cd /opt/poultry
+docker compose down --remove-orphans
+docker compose -p poultry-prod -f deploy/docker-compose.yml --env-file deploy/.env down --remove-orphans
+# legacy names from earlier deploys (project poultry vs poultry-prod)
+docker rm -f \
+  poultry-postgres poultry-api-1 poultry-db-1 poultry-web-1 \
+  poultry-prod-api-1 poultry-prod-db-1 poultry-prod-web-1 \
+  2>/dev/null || true
 cd /opt/poultry/deploy
-# if .env still has PF_TRUSTED_PROXIES=172.28.10.0/24, change to RFC1918 (see .env.example)
+# PF_TRUSTED_PROXIES must match compose network subnet (default 10.201.87.0/24)
 docker compose up -d
-docker compose ps   # db, api, web under project poultry-prod
+docker compose ps   # poultry-prod-db-1, poultry-prod-api-1, poultry-prod-web-1
 ```
 
-`Pool overlaps with other one` = fixed subnet clash; current compose lets Docker pick a free range.
+`Pool overlaps with other one` = that /24 is taken on the host. Pick another subnet in `deploy/docker-compose.yml` **and** set the same CIDR in `.env` `PF_TRUSTED_PROXIES`.
 
 Open `https://your.domain.com` (or `http://SERVER_IP` if `:80`). Demo logins same as local seed.
 

@@ -24,7 +24,14 @@
 - **Evidence:** `main.py` used `ProxyHeadersMiddleware(trusted_hosts="*")`, which sets uvicorn `always_trust` and accepts `X-Forwarded-Proto` / `X-Forwarded-For` from any peer.
 - **High-level reproduction:** Any client that can reach the API sends forged `X-Forwarded-Proto: https` (or client IP) and the app treats it as trusted.
 - **Impact:** Secure-cookie / scheme confusion; client IP spoofing in logs if relied upon.
-- **Fix:** `PF_TRUSTED_PROXIES` defaults to loopback only; `*` is rejected. Deploy sets RFC1918 private ranges (Docker assigns a free bridge subnet; fixed CIDRs often overlap on VPS hosts). uvicorn trusts peer **IP**, not Docker DNS names.
+- **Fix:** `PF_TRUSTED_PROXIES` defaults to loopback only; `*` is rejected. Deploy pins bridge `10.201.87.0/24` and trusts **only that CIDR** (not all RFC1918). uvicorn trusts peer **IP**, not Docker DNS names. If IPAM overlaps on a host, change subnet + `PF_TRUSTED_PROXIES` together.
+
+### PF-DEP-005 — Temporary RFC1918 trust expansion (reverted)
+
+- **Severity:** Medium
+- **Evidence:** Deploy briefly defaulted `PF_TRUSTED_PROXIES` to `10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` to avoid IPAM overlap.
+- **Impact:** Any RFC1918 peer that can reach the API can forge `X-Forwarded-*`.
+- **Fix:** Reverted to dedicated `10.201.87.0/24` only.
 
 ### PF-DEP-004 — Demo seed credentials
 

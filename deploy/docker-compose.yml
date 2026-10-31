@@ -1,11 +1,14 @@
 # Do not use "poultry" — that collides with root docker-compose.yml (local Postgres).
 name: poultry-prod
 
-# Docker picks a free subnet (fixed 172.28.10.0/24 often overlaps on VPS hosts).
-# PF_TRUSTED_PROXIES uses RFC1918 so Caddy on this bridge is trusted; public IPs are not.
+# Dedicated bridge for Caddy→API only. Keep PF_TRUSTED_PROXIES in lockstep with this
+# subnet (not all of RFC1918). If "Pool overlaps", pick another /24 and update both.
 networks:
   poultry:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 10.201.87.0/24
 
 services:
   db:
@@ -35,7 +38,7 @@ services:
       PF_SESSION_SECRET: ${PF_SESSION_SECRET:?set PF_SESSION_SECRET in .env}
       PF_HTTPS_ONLY: ${PF_HTTPS_ONLY:-1}
       PF_CORS_ORIGINS: ${PF_CORS_ORIGINS:-}
-      PF_TRUSTED_PROXIES: ${PF_TRUSTED_PROXIES:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      PF_TRUSTED_PROXIES: ${PF_TRUSTED_PROXIES:-10.201.87.0/24}
     depends_on:
       db:
         condition: service_healthy
@@ -63,7 +66,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "443:443/udp"
+      # HTTP/3 UDP optional; omit — some hosts fail all publishes if UDP bind fails
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS in .env (domain or :80)}
     volumes:
