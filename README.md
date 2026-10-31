@@ -114,12 +114,18 @@ docker compose exec api python seed.py
 
 From repo root instead: `docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build`.
 
-If `ps` only shows `poultry-postgres`, you are on the **root** compose or an old project. Stop it, then start deploy:
+If `ps` only shows `poultry-postgres` / odd `poultry-api-1`, stop root + orphan projects, then start **only** from `deploy/`:
 
 ```bash
 cd /opt/poultry && docker compose down
-cd /opt/poultry/deploy && docker compose up -d
+docker rm -f poultry-api-1 poultry-db-1 poultry-web-1 2>/dev/null || true
+cd /opt/poultry/deploy
+# if .env still has PF_TRUSTED_PROXIES=172.28.10.0/24, change to RFC1918 (see .env.example)
+docker compose up -d
+docker compose ps   # db, api, web under project poultry-prod
 ```
+
+`Pool overlaps with other one` = fixed subnet clash; current compose lets Docker pick a free range.
 
 Open `https://your.domain.com` (or `http://SERVER_IP` if `:80`). Demo logins same as local seed.
 

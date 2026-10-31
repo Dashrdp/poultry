@@ -1,14 +1,11 @@
 # Do not use "poultry" — that collides with root docker-compose.yml (local Postgres).
 name: poultry-prod
 
-# Fixed subnet so api can trust X-Forwarded-* only from this network (Caddy),
-# not from "*" / arbitrary peers. uvicorn matches the TCP peer IP, not DNS names.
+# Docker picks a free subnet (fixed 172.28.10.0/24 often overlaps on VPS hosts).
+# PF_TRUSTED_PROXIES uses RFC1918 so Caddy on this bridge is trusted; public IPs are not.
 networks:
   poultry:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.28.10.0/24
 
 services:
   db:
@@ -38,7 +35,7 @@ services:
       PF_SESSION_SECRET: ${PF_SESSION_SECRET:?set PF_SESSION_SECRET in .env}
       PF_HTTPS_ONLY: ${PF_HTTPS_ONLY:-1}
       PF_CORS_ORIGINS: ${PF_CORS_ORIGINS:-}
-      PF_TRUSTED_PROXIES: ${PF_TRUSTED_PROXIES:-172.28.10.0/24}
+      PF_TRUSTED_PROXIES: ${PF_TRUSTED_PROXIES:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
     depends_on:
       db:
         condition: service_healthy
