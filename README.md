@@ -95,7 +95,7 @@ Stack in `deploy/`: Postgres + FastAPI + Caddy (static UI, TLS, `/api` + `/healt
 
 On the host: Docker Engine + Compose plugin, ports **80/443** open, DNS A/AAAA on your domain pointing at the box.
 
-Always use the **deploy** compose (root `docker-compose.yml` is local Postgres only — no `api`/`web`).
+Always use the **deploy** compose (root `docker-compose.yml` is local Postgres only — no `api`/`web`). Project name is `poultry-prod`.
 
 ```bash
 cd /opt/poultry/deploy   # or: cd deploy
@@ -105,12 +105,21 @@ cp .env.example .env
 # SITE_ADDRESS=:80               # HTTP only / IP smoke test → set PF_HTTPS_ONLY=0
 
 docker compose up -d --build
+# build alone does not start containers — always up -d after build
 docker compose ps
+# expect: db, api, web (not poultry-postgres)
 docker compose logs api --tail 100
 docker compose exec api python seed.py
 ```
 
 From repo root instead: `docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build`.
+
+If `ps` only shows `poultry-postgres`, you are on the **root** compose or an old project. Stop it, then start deploy:
+
+```bash
+cd /opt/poultry && docker compose down
+cd /opt/poultry/deploy && docker compose up -d
+```
 
 Open `https://your.domain.com` (or `http://SERVER_IP` if `:80`). Demo logins same as local seed.
 

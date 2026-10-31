@@ -1,5 +1,5 @@
-# Stable project name whether you run from repo root or deploy/.
-name: poultry
+# Do not use "poultry" — that collides with root docker-compose.yml (local Postgres).
+name: poultry-prod
 
 # Fixed subnet so api can trust X-Forwarded-* only from this network (Caddy),
 # not from "*" / arbitrary peers. uvicorn matches the TCP peer IP, not DNS names.
